@@ -4,6 +4,8 @@ Table of Contents
 
     *   [Compatibility](#compatibility)
 
+    *   [Microsoft Visual Studio compatibility](#microsoft_visual_studio_compatibility)
+
     *   [Version 1.3 notes](#version_1.3_notes)
 
     *   [Basic usage](#basic_usage)
@@ -33,6 +35,14 @@ Components built with this SDK are compatible with foobar2000 1.3. They are not 
 
 <!-- SECTION "Compatibility" [44-395] -->
 
+## [Microsoft Visual Studio compatibility]()
+
+This SDK contains project files for Visual Studio 2010. This version of VS has been used for foobar2000 core development for a long time and it is the safest version to use.
+
+VS2012, 2013 and 2015 currently produce incorrect output in release mode on foobar2000 code - see [forum thread](http://www.hydrogenaud.io/forums/index.php?showtopic=108411 "http://www.hydrogenaud.io/forums/index.php?showtopic=108411") for details. You can mitigate this issue by compiling all affected code (foobar2000 SDK code along with everything that uses foobar2000 SDK classes) with /d2notypeopt option.
+
+<!-- SECTION "Microsoft Visual Studio compatibility" [396-972] -->
+
 ## [Version 1.3 notes]()
 
 foobar2000 version 1.3 uses different metadb behavior semantics than older versions, to greatly improve the performance of multithreaded operation by reducing the time spent within global metadb locks.
@@ -46,7 +56,7 @@ Any methods that:
 
 It is recommended that you change your existing code using these to obtain track information using new get\_info\_ref() style methods for much better performance as these methods have minimal overhead and require no special care when used in multiple concurrent threads.
 
-<!-- SECTION "Version 1.3 notes" [396-1151] -->
+<!-- SECTION "Version 1.3 notes" [973-1728] -->
 
 ## [Basic usage]()
 
@@ -70,13 +80,13 @@ Component code should include the following header files:
 *   Optionally: helpers.h from helpers directory (foobar2000\_SDK\_helpers project) - a library of various helper code commonly used by foobar2000 components.
 *   Optionally: ATLHelpers.h from ATLHelpers directory (foobar2000\_ATL\_helpers project) - another library of various helper code commonly used by foobar2000 components; requires WTL. Note that ATLHelpers.h already includes SDK/foobar2000.h and helpers/helpers.h so you can replace your other include lines with a reference to ATLHelpers.h.
 
-<!-- SECTION "Basic usage" [1152-2903] -->
+<!-- SECTION "Basic usage" [1729-3480] -->
 
 ## [Structure of a component]()
 
 A component is a DLL that implements one or more entrypoint services and interacts with services provided by other components.
 
-<!-- SECTION "Structure of a component" [2904-3070] -->
+<!-- SECTION "Structure of a component" [3481-3647] -->
 
 ### [Services]()
 
@@ -86,7 +96,7 @@ A service implementation is a class derived from relevant service type class, im
 
 Each service object provides reference counter features and (`service_add_ref()` and `service_release()` methods) as well as a method to query for extended functionality (`service_query()` method). Those methods are implemented by service framework and should be never overridden by service implementations. These methods should also never be called directly - reference counter methods are managed by relevant autopointer templates, `service_query_t` function template should be used instead of calling `service_query` directly, to ensure type safety and correct type conversions.
 
-<!-- SECTION "Services" [3071-5336] -->
+<!-- SECTION "Services" [3648-5913] -->
 
 ### [Entrypoint services]()
 
@@ -119,7 +129,7 @@ A typical entrypoint service implementation looks like this:
     };
     static service_factory_single_t<myservice_impl> g_myservice_impl_factory;
 
-<!-- SECTION "Entrypoint services" [5337-7808] -->
+<!-- SECTION "Entrypoint services" [5914-8385] -->
 
 ### [Service extensions]()
 
@@ -136,13 +146,13 @@ In such scenario, to query whether a myservice instance is a `myservice_v2` and 
     if (ptr->service_query_t(ptr_ex)) { /* ptr_ex is a valid pointer to myservice_v2 interface of our myservice instance */ (...) }
     else {/* this myservice implementation does not implement myservice_v2 */ (...) }
 
-<!-- SECTION "Service extensions" [7809-8748] -->
+<!-- SECTION "Service extensions" [8386-9325] -->
 
 ### [Autopointer template use]()
 
 When performing most kinds of service operations, `service_ptr_t<T>` template should be used rather than working with service pointers directly; it automatically manages reference counter calls, ensuring that the service object is deleted when it is no longer referenced. Additionally, `static_api_ptr_t<T>` can be used to automatically acquire/release a pointer to single-implementation entrypoint service, such as one of standard APIs like `playlist_manager`.
 
-<!-- SECTION "Autopointer template use" [8749-9253] -->
+<!-- SECTION "Autopointer template use" [9326-9830] -->
 
 ### [Exception use]()
 
@@ -152,7 +162,7 @@ Additionally, special subclasses of exceptions are defined for use in specific c
 
 Implementations of global callback services such as `playlist_callback`, `playback_callback` or `library_callback` must not throw unhandled exceptions; behaviors in case they do are undefined (app termination is to be expected).
 
-<!-- SECTION "Exception use" [9254-10271] -->
+<!-- SECTION "Exception use" [9831-10848] -->
 
 ### [Storing configuration]()
 
@@ -162,7 +172,7 @@ Each `cfg_var` instance has a GUID assigned, to identify its configuration file 
 
 Note that `cfg_var` objects can only be instantiated statically (either directly as static objects, or as members of other static objects). Additionally, you can create configuration data objects that can be accessed by other components, by implementing `config_object` service. Some standard configuration variables can be also accessed using `config_object` interface.
 
-<!-- SECTION "Storing configuration" [10272-11207] -->
+<!-- SECTION "Storing configuration" [10849-11784] -->
 
 ### [Use of global callback services]()
 
@@ -188,19 +198,19 @@ You must not enter modal message loops from inside global callbacks, as those al
 
 You should also avoid firing a cross-thread SendMessage() inside global callbacks as well as performing any operations that dispatch global callbacks when handling a message that was sent through a cross-thread SendMessage(). Doing so may result in rare unwanted recursions - SendMessage() call will block the calling thread and immediately process any incoming cross-thread SendMessage() messages. If you're handling a cross-thread SendMessage() and need to perform such operation, delay it using PostMessage() or main\_thread\_callback.
 
-<!-- SECTION "Use of global callback services" [11208-13629] -->
+<!-- SECTION "Use of global callback services" [11785-14206] -->
 
 ## [Service class design guidelines (advanced)]()
 
 This chapter describes things you should keep on your mind when designing your own service type classes. Since 99% of components will only implement existing service types rather than adding their own cross-DLL-communication protocols, you can probably skip reading this chapter.
 
-<!-- SECTION "Service class design guidelines (advanced)" [13630-13966] -->
+<!-- SECTION "Service class design guidelines (advanced)" [14207-14543] -->
 
 ### [Cross-DLL safety]()
 
 It is important that all function parameters used by virtual methods of services are cross-DLL safe (do not depend on compiler-specific or runtime-specific behaviors, so no unexpected behaviors occur when calling code is built with different compiler/runtime than callee). To achieve this, any classes passed around must be either simple objects with no structure that could possibly vary with different compilers/runtimes (i.e. make sure that any memory blocks are freed on the side that allocated them); easiest way to achieve this is to reduce all complex data objects or classes passed around to interfaces with virtual methods, with implementation details hidden from callee. For an example, use `pfc::string_base&` as parameter to a function that is meant to return variable-length strings.
 
-<!-- SECTION "Cross-DLL safety" [13967-14794] -->
+<!-- SECTION "Cross-DLL safety" [14544-15371] -->
 
 ### [Entrypoint service efficiency]()
 
@@ -266,4 +276,4 @@ When designing an entrypoint service interface meant to have multiple different 
     	throw exception_io_data();
     }
 
-<!-- SECTION "Entrypoint service efficiency" [14795-] -->
+<!-- SECTION "Entrypoint service efficiency" [15372-] -->
