@@ -1,10 +1,22 @@
 Table of Contents
 
-*   [foobar2000 v1.3 SDK readme](#foobar2000_v1.3_sdk_readme)
+*   [foobar2000 v1.4 beta SDK readme](#foobar2000_v1.4_beta_sdk_readme)
+
+    *   [Beta release notice](#beta_release_notice)
 
     *   [Compatibility](#compatibility)
 
     *   [Microsoft Visual Studio compatibility](#microsoft_visual_studio_compatibility)
+
+        *   [Ill behavior of Visual C whole program optimization](#ill_behavior_of_visual_c_whole_program_optimization)
+        *   ["virtual memory range for PCH exceeded" error](#virtual_memory_range_for_pch_exceeded_error)
+
+    *   [Version 1.4 notes](#version_1.4_notes)
+
+        *   [Namespace cleanup](#namespace_cleanup)
+        *   [Decoders](#decoders)
+        *   [Dynamic runtime](#dynamic_runtime)
+        *   [service\_query()](#service_query)
 
     *   [Version 1.3 notes](#version_1.3_notes)
 
@@ -25,23 +37,150 @@ Table of Contents
         *   [Cross-DLL safety](#cross-dll_safety)
         *   [Entrypoint service efficiency](#entrypoint_service_efficiency)
 
-# [foobar2000 v1.3 SDK readme]()
+# [foobar2000 v1.4 beta SDK readme]()
 
-<!-- SECTION "foobar2000 v1.3 SDK readme" [1-43] -->
+<!-- SECTION "foobar2000 v1.4 beta SDK readme" [1-47] -->
+
+## [Beta release notice]()
+
+This SDK is safe for general use.
+
+However please keep in mind that foobar2000 v1.4 is currently in beta and some of the new features may undergo changes before the final version is out.
+
+<!-- SECTION "Beta release notice" [48-269] -->
 
 ## [Compatibility]()
 
-Components built with this SDK are compatible with foobar2000 1.3. They are not compatible with any earlier versions (will fail to load), and not guaranteed to be compatible with any future versions, though upcoming releases will aim to maintain compatibility as far as possible without crippling newly added functionality.
+Components built with this SDK are compatible with foobar2000 1.3 and 1.4 series. They are not compatible with any earlier versions (will fail to load), and not guaranteed to be compatible with any future versions, though upcoming releases will aim to maintain compatibility as far as possible without crippling newly added functionality.
 
-<!-- SECTION "Compatibility" [44-395] -->
+Note that components built with this SDK can provide foobar2000 1.4 functionality while maintaining compatibility with the 1.3 series.
+
+While this is not recommended, you can alter the targeted foobar2000 API level, edit SDK/foobar2000.h and change the value of FOOBAR2000\_TARGET\_VERSION.
+
+Currently supported values are 78 (for 1.3 series) and 79 (for 1.4 series).
+
+API 78 components load in foobar2000 1.3 and 1.4; API 79 components load in 1.4 only.
+
+<!-- SECTION "Compatibility" [270-1090] -->
 
 ## [Microsoft Visual Studio compatibility]()
 
-This SDK contains project files for Visual Studio 2010. This version of VS has been used for foobar2000 core development for a long time and it is the safest version to use.
+This SDK contains project files for Visual Studio 2017.
 
-VS2012, 2013 and 2015 currently produce incorrect output in release mode on foobar2000 code - see [forum thread](http://www.hydrogenaud.io/forums/index.php?showtopic=108411 "http://www.hydrogenaud.io/forums/index.php?showtopic=108411") for details. You can mitigate this issue by compiling all affected code (foobar2000 SDK code along with everything that uses foobar2000 SDK classes) with /d2notypeopt option.
+<!-- SECTION "Microsoft Visual Studio compatibility" [1091-1197] -->
 
-<!-- SECTION "Microsoft Visual Studio compatibility" [396-972] -->
+### [Ill behavior of Visual C whole program optimization]()
+
+Visual Studio versions from 2012 up produce incorrect output with default release settings on foobar2000 code - see [forum thread](http://www.hydrogenaud.io/forums/index.php?showtopic=108411 "http://www.hydrogenaud.io/forums/index.php?showtopic=108411") for details. You can mitigate this issue by compiling all affected code (foobar2000 SDK code along with everything that uses foobar2000 SDK classes) with /d2notypeopt option. This is set by default on project files provided with the SDK; please make sure that you set this option on any projects of your own.
+
+If you're aware of a better workaround - such as a source code change rather than setting an obscure compiler flag - please let us know; posting on the forum is preferred for the benefit of other users of this SDK.
+
+<!-- SECTION "Ill behavior of Visual C whole program optimization" [1198-1977] -->
+
+### ["virtual memory range for PCH exceeded" error]()
+
+By convention, foobar2000 code used to #include every single SDK and utility header in a precompiled header (PCH) file. This became an issue with certain Visual Studio setups, as the PCH payload became extremely large.
+
+The SDK has been changed to reduce the amount of unnecessary code shoved into #included headers; errors of this type are yet to be seen with this version of the foobar2000 SDK compiled under VS2017.
+
+If you run into this error, we recommend the following steps:
+
+*   ATLHelpers: do not #include ATLHelpers/ATLHelpers.h - use ATLHelpersLean.h instead + additional ones on need-to-use basis.
+*   Helpers: do not #include helpers.h, #include individual ones as needed; most of the declare functionality needed for very specific components only.
+
+<!-- SECTION "virtual memory range for PCH exceeded error" [1978-2795] -->
+
+## [Version 1.4 notes]()
+
+<!-- SECTION "Version 1.4 notes" [2796-2825] -->
+
+### [Namespace cleanup]()
+
+Some very old inconsistencies in the code have been cleaned up. Various bit\_array classes are now in pfc namespace where they belong. Please use pfc::bit\_array and so on in new code. If you have code that references bit\_array classes without the pfc:: prefix, put “using pfc::bit\_array” in your headers to work around it.
+
+<!-- SECTION "Namespace cleanup" [2826-3175] -->
+
+### [Decoders]()
+
+#### [Invoking decoders]()
+
+Each new decoder (input\_entry) now provides a get\_guid() and get\_name() to allow user to choose the order in which they're invoked as well as disable individual installed decoders. Because of this, you are no longer supposed to walk input\_entry instances in your code; however many existing components do so because this was the way things were expected to work in all past versions before 1.4.
+
+In most cases there's nothing that you need to do about this, unless you have code that talks to input\_entry instance methods directly.
+
+##### [input\_manager]()
+
+The proper way to instantiate any input related classes is to call input\_manager; it manages opening of decoders respecting user's decoder merit settings. Calling any of the helper methods to open decoders / read tags / etc in the SDK will call input\_manager if available (v1.4) and fall back to walking input\_entry services if not (v1.3).
+
+##### [input\_entry shim]()
+
+If your component targets API level lower than 79 (this SDK comes configured for 78 by default), all your attempts to walk input\_entry services return a shim service that redirects all your calls to input\_manager. You cannot walk actual input\_entry services.
+
+This is to keep existing components working as intended.
+
+If your component targets API level 79 (which means it won't load on v1.3), the shim is not installed as your component is expected to be aware of the new semantics.
+
+#### [Implementing decoders]()
+
+Many new input methods have been added and some are mandatory for all code, in particular reporting of decoder name and GUID; existing code not providing these will not compile. However some of the methods now required to be provided by an input class are mundane and will be left blank in majority of implementations; an input\_stubs class has been introduced to help with these. In past SDK versions, your input class would not derive from another class; it is now recommended to derive from input\_stubs to avoid having to supply mundane methods yourself.
+
+##### [Specify supported interfaces]()
+
+You can now control which level of decoder API your instance supports from your input class instead of using multi parameter input\_factory classes.
+
+The input\_stubs class provides these for your convenience:
+
+    typedef input_decoder_v4 interface_decoder_t;
+    typedef input_info_reader interface_info_reader_t;
+    typedef input_info_writer interface_info_writer_t;
+
+Override these in your input class to indicate supported interfaces.
+
+For an example, if your input supports remove\_tags(), indicate that you implement input\_info\_writer\_v2:
+
+    typedef input_info_writer_v2 interface_info_writer_t;
+
+<!-- SECTION "Decoders" [3176-5857] -->
+
+### [Dynamic runtime]()
+
+As of version 1.4, foobar2000 is compiled with dynamic Visual C runtime and redistributes Visual C runtime libraries with the installer, putting them in the foobar2000 installation folder if necessary. The benefits of this are: \* Smaller component DLLs \* Increased limit of how many component DLLs can be loaded.
+
+This SDK comes configured for static runtime by default, for compatibility with foobar2000 version 1.3. If your component is for foobar2000 series 1.4 only, you can switch to using dynamic runtime instead - make sure to change the setting for all projects in your workspace.
+
+<!-- SECTION "Dynamic runtime" [5858-6474] -->
+
+### [service\_query()]()
+
+tl;dr if you don't know what this is about you probably don't care and your component isn't in any way affected by this.
+
+The way service\_query() is implemented has been redesigned for performance reasons - the old way ( implemented per interface class via FB2K\_MAKE\_SERVICE\_INTERFACE macro ) resulted in every single class\_guid from the entire SDK being included in your DLL, due to strange behaviors of Microsoft linker.
+
+The service\_query() function itself is now provided by service\_impl\_\* classes, so it's materialized only for services that your code implements and spawns.
+
+The default implementation calls a newly added static method of handle\_service\_query(), implemented in service\_base to check against all supported interfaces by walking derived class chain.
+
+If you wish to override it, create a function with a matching signature in your class and it will be called instead:
+
+    class myClass : public service_base {
+    public:
+        static bool handle_service_query(service_ptr & out, const GUID & guid, myClass * in) {
+            if ( guid == myClassGUID ) {
+                out = in; return true;
+            }
+            return false;
+        }
+    };
+
+#### [Multi-inheritance]()
+
+The above change to service\_query() implementation rules obviously breaks any existing code where one class inherits from multiple service classes and supplies a custom service\_query().
+
+While using multi inheritance is not recommended and very rarely done, a new template has been added to help with such cases: service\_multi\_inherit\<class1, class2>.
+
+You can use it to avoid having to supply service\_query() code yourself and possibly change it if service\_query() semantics change again in the future.
+
+<!-- SECTION "service_query()" [6475-8185] -->
 
 ## [Version 1.3 notes]()
 
@@ -56,7 +195,7 @@ Any methods that:
 
 It is recommended that you change your existing code using these to obtain track information using new get\_info\_ref() style methods for much better performance as these methods have minimal overhead and require no special care when used in multiple concurrent threads.
 
-<!-- SECTION "Version 1.3 notes" [973-1728] -->
+<!-- SECTION "Version 1.3 notes" [8186-8941] -->
 
 ## [Basic usage]()
 
@@ -80,13 +219,13 @@ Component code should include the following header files:
 *   Optionally: helpers.h from helpers directory (foobar2000\_SDK\_helpers project) - a library of various helper code commonly used by foobar2000 components.
 *   Optionally: ATLHelpers.h from ATLHelpers directory (foobar2000\_ATL\_helpers project) - another library of various helper code commonly used by foobar2000 components; requires WTL. Note that ATLHelpers.h already includes SDK/foobar2000.h and helpers/helpers.h so you can replace your other include lines with a reference to ATLHelpers.h.
 
-<!-- SECTION "Basic usage" [1729-3480] -->
+<!-- SECTION "Basic usage" [8942-10693] -->
 
 ## [Structure of a component]()
 
 A component is a DLL that implements one or more entrypoint services and interacts with services provided by other components.
 
-<!-- SECTION "Structure of a component" [3481-3647] -->
+<!-- SECTION "Structure of a component" [10694-10860] -->
 
 ### [Services]()
 
@@ -96,7 +235,7 @@ A service implementation is a class derived from relevant service type class, im
 
 Each service object provides reference counter features and (`service_add_ref()` and `service_release()` methods) as well as a method to query for extended functionality (`service_query()` method). Those methods are implemented by service framework and should be never overridden by service implementations. These methods should also never be called directly - reference counter methods are managed by relevant autopointer templates, `service_query_t` function template should be used instead of calling `service_query` directly, to ensure type safety and correct type conversions.
 
-<!-- SECTION "Services" [3648-5913] -->
+<!-- SECTION "Services" [10861-13126] -->
 
 ### [Entrypoint services]()
 
@@ -108,9 +247,9 @@ Registered entrypoint services can be accessed using:
 
         service_enum_t<someclass> e; service_ptr_t<someclass> ptr; while(e.next(ptr)) ptr->dosomething();
 
-*   For services types with single always-present implementation registered - such as core services like `playlist_manager` - using `static_api_ptr_t<T>` template, e.g.:
+*   For services types with a single always-present implementation registered - such as core services like `playlist_manager` - using `someclass::get()`, e.g.:
 
-        static_api_ptr_t<someclass> api; api->dosomething(); api->dosomethingelse();
+        auto api = someclass::get(); api->dosomething(); api->dosomethingelse();
 
 *   Using per-service-type defined static helper functions, e.g. `someclass::g_dosomething()` - those use relevant service enumeration methods internally.
 
@@ -129,7 +268,7 @@ A typical entrypoint service implementation looks like this:
     };
     static service_factory_single_t<myservice_impl> g_myservice_impl_factory;
 
-<!-- SECTION "Entrypoint services" [5914-8385] -->
+<!-- SECTION "Entrypoint services" [13127-15584] -->
 
 ### [Service extensions]()
 
@@ -146,13 +285,17 @@ In such scenario, to query whether a myservice instance is a `myservice_v2` and 
     if (ptr->service_query_t(ptr_ex)) { /* ptr_ex is a valid pointer to myservice_v2 interface of our myservice instance */ (...) }
     else {/* this myservice implementation does not implement myservice_v2 */ (...) }
 
-<!-- SECTION "Service extensions" [8386-9325] -->
+<!-- SECTION "Service extensions" [15585-16524] -->
 
 ### [Autopointer template use]()
 
-When performing most kinds of service operations, `service_ptr_t<T>` template should be used rather than working with service pointers directly; it automatically manages reference counter calls, ensuring that the service object is deleted when it is no longer referenced. Additionally, `static_api_ptr_t<T>` can be used to automatically acquire/release a pointer to single-implementation entrypoint service, such as one of standard APIs like `playlist_manager`.
+When performing most kinds of service operations, `service_ptr_t<T>` template should be used rather than working with service pointers directly; it automatically manages reference counter calls, ensuring that the service object is deleted when it is no longer referenced.
 
-<!-- SECTION "Autopointer template use" [9326-9830] -->
+For convenience, all service classes have `myclass::ptr` typedef'd to `service_ptr_t<myclass>`.
+
+When working with pointers to core fb2k services, just use C++11 `auto` keyword and `someclass::get()`, e.g. `auto myAPI = playlist_manager::get();`
+
+<!-- SECTION "Autopointer template use" [16525-17092] -->
 
 ### [Exception use]()
 
@@ -162,7 +305,7 @@ Additionally, special subclasses of exceptions are defined for use in specific c
 
 Implementations of global callback services such as `playlist_callback`, `playback_callback` or `library_callback` must not throw unhandled exceptions; behaviors in case they do are undefined (app termination is to be expected).
 
-<!-- SECTION "Exception use" [9831-10848] -->
+<!-- SECTION "Exception use" [17093-18110] -->
 
 ### [Storing configuration]()
 
@@ -172,7 +315,7 @@ Each `cfg_var` instance has a GUID assigned, to identify its configuration file 
 
 Note that `cfg_var` objects can only be instantiated statically (either directly as static objects, or as members of other static objects). Additionally, you can create configuration data objects that can be accessed by other components, by implementing `config_object` service. Some standard configuration variables can be also accessed using `config_object` interface.
 
-<!-- SECTION "Storing configuration" [10849-11784] -->
+<!-- SECTION "Storing configuration" [18111-19046] -->
 
 ### [Use of global callback services]()
 
@@ -198,19 +341,19 @@ You must not enter modal message loops from inside global callbacks, as those al
 
 You should also avoid firing a cross-thread SendMessage() inside global callbacks as well as performing any operations that dispatch global callbacks when handling a message that was sent through a cross-thread SendMessage(). Doing so may result in rare unwanted recursions - SendMessage() call will block the calling thread and immediately process any incoming cross-thread SendMessage() messages. If you're handling a cross-thread SendMessage() and need to perform such operation, delay it using PostMessage() or main\_thread\_callback.
 
-<!-- SECTION "Use of global callback services" [11785-14206] -->
+<!-- SECTION "Use of global callback services" [19047-21468] -->
 
 ## [Service class design guidelines (advanced)]()
 
 This chapter describes things you should keep on your mind when designing your own service type classes. Since 99% of components will only implement existing service types rather than adding their own cross-DLL-communication protocols, you can probably skip reading this chapter.
 
-<!-- SECTION "Service class design guidelines (advanced)" [14207-14543] -->
+<!-- SECTION "Service class design guidelines (advanced)" [21469-21805] -->
 
 ### [Cross-DLL safety]()
 
 It is important that all function parameters used by virtual methods of services are cross-DLL safe (do not depend on compiler-specific or runtime-specific behaviors, so no unexpected behaviors occur when calling code is built with different compiler/runtime than callee). To achieve this, any classes passed around must be either simple objects with no structure that could possibly vary with different compilers/runtimes (i.e. make sure that any memory blocks are freed on the side that allocated them); easiest way to achieve this is to reduce all complex data objects or classes passed around to interfaces with virtual methods, with implementation details hidden from callee. For an example, use `pfc::string_base&` as parameter to a function that is meant to return variable-length strings.
 
-<!-- SECTION "Cross-DLL safety" [14544-15371] -->
+<!-- SECTION "Cross-DLL safety" [21806-22633] -->
 
 ### [Entrypoint service efficiency]()
 
@@ -276,4 +419,4 @@ When designing an entrypoint service interface meant to have multiple different 
     	throw exception_io_data();
     }
 
-<!-- SECTION "Entrypoint service efficiency" [15372-] -->
+<!-- SECTION "Entrypoint service efficiency" [22634-] -->
