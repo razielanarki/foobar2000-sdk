@@ -117,7 +117,7 @@ The proper way to instantiate any input related classes is to call input\_manage
 
 ##### [input\_entry shim]()
 
-If your component targets API level lower than 79 (this SDK comes configured for 78 by default), all your attempts to walk input\_entry services return a shim service that redirects all your calls to input\_manager. You cannot walk actual input\_entry services.
+If your component targets API level lower than 79, all your attempts to walk input\_entry services return a shim service that redirects all your calls to input\_manager. You cannot walk actual input\_entry services.
 
 This is to keep existing components working as intended.
 
@@ -143,15 +143,15 @@ For an example, if your input supports remove\_tags(), indicate that you impleme
 
     typedef input_info_writer_v2 interface_info_writer_t;
 
-<!-- SECTION "Decoders" [3447-6128] -->
+<!-- SECTION "Decoders" [3447-6082] -->
 
 ### [Dynamic runtime]()
 
 As of version 1.4, foobar2000 is compiled with dynamic Visual C runtime and redistributes Visual C runtime libraries with the installer, putting them in the foobar2000 installation folder if necessary. The benefits of this are: \* Smaller component DLLs \* Increased limit of how many component DLLs can be loaded.
 
-This SDK comes configured for static runtime by default, for compatibility with foobar2000 version 1.3. If your component is for foobar2000 series 1.4 only, you can switch to using dynamic runtime instead - make sure to change the setting for all projects in your workspace.
+This SDK comes configured for dynamic runtime by default. If you wish to support foobar2000 versions older than 1.4, change to static runtime or make sure that your users have the runtime installed.
 
-<!-- SECTION "Dynamic runtime" [6129-6745] -->
+<!-- SECTION "Dynamic runtime" [6083-6623] -->
 
 ### [service\_query()]()
 
@@ -183,7 +183,7 @@ While using multi inheritance is not recommended and very rarely done, a new tem
 
 You can use it to avoid having to supply service\_query() code yourself and possibly change it if service\_query() semantics change again in the future.
 
-<!-- SECTION "service_query()" [6746-8456] -->
+<!-- SECTION "service_query()" [6624-8334] -->
 
 ## [Version 1.3 notes]()
 
@@ -198,7 +198,7 @@ Any methods that:
 
 It is recommended that you change your existing code using these to obtain track information using new get\_info\_ref() style methods for much better performance as these methods have minimal overhead and require no special care when used in multiple concurrent threads.
 
-<!-- SECTION "Version 1.3 notes" [8457-9212] -->
+<!-- SECTION "Version 1.3 notes" [8335-9090] -->
 
 ## [Basic usage]()
 
@@ -221,13 +221,13 @@ Component code should include the following header files:
 *   foobar2000.h from SDK - do not include other headers from the SDK directory directly, they're meant to be referenced by foobar2000.h only; it also includes PFC headers and shared.dll helper declaration headers.
 *   Necessary headers from libPPUI and helpers, which both contain various code commonly used by fb2k components.
 
-<!-- SECTION "Basic usage" [9213-10581] -->
+<!-- SECTION "Basic usage" [9091-10459] -->
 
 ## [Structure of a component]()
 
 A component is a DLL that implements one or more entrypoint services and interacts with services provided by other components.
 
-<!-- SECTION "Structure of a component" [10582-10748] -->
+<!-- SECTION "Structure of a component" [10460-10626] -->
 
 ### [Services]()
 
@@ -237,7 +237,7 @@ A service implementation is a class derived from relevant service type class, im
 
 Each service object provides reference counter features and (`service_add_ref()` and `service_release()` methods) as well as a method to query for extended functionality (`service_query()` method). Those methods are implemented by service framework and should be never overridden by service implementations. These methods should also never be called directly - reference counter methods are managed by relevant autopointer templates, `service_query_t` function template should be used instead of calling `service_query` directly, to ensure type safety and correct type conversions.
 
-<!-- SECTION "Services" [10749-13014] -->
+<!-- SECTION "Services" [10627-12892] -->
 
 ### [Entrypoint services]()
 
@@ -270,7 +270,7 @@ A typical entrypoint service implementation looks like this:
     };
     static service_factory_single_t<myservice_impl> g_myservice_impl_factory;
 
-<!-- SECTION "Entrypoint services" [13015-15472] -->
+<!-- SECTION "Entrypoint services" [12893-15350] -->
 
 ### [Service extensions]()
 
@@ -287,7 +287,7 @@ In such scenario, to query whether a myservice instance is a `myservice_v2` and 
     if (ptr->service_query_t(ptr_ex)) { /* ptr_ex is a valid pointer to myservice_v2 interface of our myservice instance */ (...) }
     else {/* this myservice implementation does not implement myservice_v2 */ (...) }
 
-<!-- SECTION "Service extensions" [15473-16412] -->
+<!-- SECTION "Service extensions" [15351-16290] -->
 
 ### [Autopointer template use]()
 
@@ -297,7 +297,7 @@ For convenience, all service classes have `myclass::ptr` typedef'd to `service_p
 
 When working with pointers to core fb2k services, just use C++11 `auto` keyword and `someclass::get()`, e.g. `auto myAPI = playlist_manager::get();`
 
-<!-- SECTION "Autopointer template use" [16413-16980] -->
+<!-- SECTION "Autopointer template use" [16291-16858] -->
 
 ### [Exception use]()
 
@@ -307,7 +307,7 @@ Additionally, special subclasses of exceptions are defined for use in specific c
 
 Implementations of global callback services such as `playlist_callback`, `playback_callback` or `library_callback` must not throw unhandled exceptions; behaviors in case they do are undefined (app termination is to be expected).
 
-<!-- SECTION "Exception use" [16981-17998] -->
+<!-- SECTION "Exception use" [16859-17876] -->
 
 ### [Storing configuration]()
 
@@ -317,7 +317,7 @@ Each `cfg_var` instance has a GUID assigned, to identify its configuration file 
 
 Note that `cfg_var` objects can only be instantiated statically (either directly as static objects, or as members of other static objects). Additionally, you can create configuration data objects that can be accessed by other components, by implementing `config_object` service. Some standard configuration variables can be also accessed using `config_object` interface.
 
-<!-- SECTION "Storing configuration" [17999-18934] -->
+<!-- SECTION "Storing configuration" [17877-18812] -->
 
 ### [Use of global callback services]()
 
@@ -343,19 +343,19 @@ You must not enter modal message loops from inside global callbacks, as those al
 
 You should also avoid firing a cross-thread SendMessage() inside global callbacks as well as performing any operations that dispatch global callbacks when handling a message that was sent through a cross-thread SendMessage(). Doing so may result in rare unwanted recursions - SendMessage() call will block the calling thread and immediately process any incoming cross-thread SendMessage() messages. If you're handling a cross-thread SendMessage() and need to perform such operation, delay it using PostMessage() or main\_thread\_callback.
 
-<!-- SECTION "Use of global callback services" [18935-21356] -->
+<!-- SECTION "Use of global callback services" [18813-21234] -->
 
 ## [Service class design guidelines (advanced)]()
 
 This chapter describes things you should keep on your mind when designing your own service type classes. Since 99% of components will only implement existing service types rather than adding their own cross-DLL-communication protocols, you can probably skip reading this chapter.
 
-<!-- SECTION "Service class design guidelines (advanced)" [21357-21693] -->
+<!-- SECTION "Service class design guidelines (advanced)" [21235-21571] -->
 
 ### [Cross-DLL safety]()
 
 It is important that all function parameters used by virtual methods of services are cross-DLL safe (do not depend on compiler-specific or runtime-specific behaviors, so no unexpected behaviors occur when calling code is built with different compiler/runtime than callee). To achieve this, any classes passed around must be either simple objects with no structure that could possibly vary with different compilers/runtimes (i.e. make sure that any memory blocks are freed on the side that allocated them); easiest way to achieve this is to reduce all complex data objects or classes passed around to interfaces with virtual methods, with implementation details hidden from callee. For an example, use `pfc::string_base&` as parameter to a function that is meant to return variable-length strings.
 
-<!-- SECTION "Cross-DLL safety" [21694-22521] -->
+<!-- SECTION "Cross-DLL safety" [21572-22399] -->
 
 ### [Entrypoint service efficiency]()
 
@@ -421,4 +421,4 @@ When designing an entrypoint service interface meant to have multiple different 
     	throw exception_io_data();
     }
 
-<!-- SECTION "Entrypoint service efficiency" [22522-] -->
+<!-- SECTION "Entrypoint service efficiency" [22400-] -->
