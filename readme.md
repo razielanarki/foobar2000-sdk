@@ -1,6 +1,6 @@
 Table of Contents
 
-*   [foobar2000 v1.5 SDK readme](#foobar2000_v1.5_sdk_readme)
+*   [foobar2000 v1.6 SDK readme](#foobar2000_v1.6_sdk_readme)
 
     *   [Compatibility](#compatibility)
 
@@ -9,9 +9,18 @@ Table of Contents
         *   [Ill behavior of Visual C whole program optimization](#ill_behavior_of_visual_c_whole_program_optimization)
         *   ["virtual memory range for PCH exceeded" error](#virtual_memory_range_for_pch_exceeded_error)
 
+    *   [Version 1.6 notes](#version_1.6_notes)
+
+        *   [Windows XP support](#windows_xp_support)
+        *   [Audio output API extensions](#audio_output_api_extensions)
+        *   [WebP support, imageLoaderLite](#webp_support_imageloaderlite)
+        *   [File cache utilities](#file_cache_utilities)
+        *   [Cuesheet wrapper fixes](#cuesheet_wrapper_fixes)
+        *   [libPPUI](#libppui)
+
     *   [Version 1.5 notes](#version_1.5_notes)
 
-        *   [libPPUI](#libppui)
+        *   [libPPUI](#libppui1)
 
     *   [Version 1.4 notes](#version_1.4_notes)
 
@@ -39,29 +48,25 @@ Table of Contents
         *   [Cross-DLL safety](#cross-dll_safety)
         *   [Entrypoint service efficiency](#entrypoint_service_efficiency)
 
-# [foobar2000 v1.5 SDK readme]()
+# [foobar2000 v1.6 SDK readme]()
 
-<!-- SECTION "foobar2000 v1.5 SDK readme" [1-42] -->
+<!-- SECTION "foobar2000 v1.6 SDK readme" [1-42] -->
 
 ## [Compatibility]()
 
-Components built with this SDK are compatible with foobar2000 1.3, 1.4 and 1.5 series. They are not compatible with any earlier versions (will fail to load), and not guaranteed to be compatible with any future versions, though upcoming releases will aim to maintain compatibility as far as possible without crippling newly added functionality.
-
-Note that components built with this SDK can provide foobar2000 1.4/1.5 functionality while maintaining compatibility with the 1.3 series.
+Components built with this SDK are compatible with foobar2000 1.4 and newer. They are not compatible with any earlier versions (will fail to load), and not guaranteed to be compatible with any future versions, though upcoming releases will aim to maintain compatibility as far as possible without crippling newly added functionality.
 
 You can alter the targeted foobar2000 API level, edit SDK/foobar2000.h and change the value of FOOBAR2000\_TARGET\_VERSION.
 
-Currently supported values are 78 (for 1.3 series), 79 (for 1.4 series) and 80 (for 1.5 series).
+Currently supported values are 79 (for 1.4 series) and 80 (for 1.5 & 1.6 series).
 
-API 78 components load in foobar2000 1.3 and newer; API 79 components load in 1.4 and newer, API 80 components load in 1.5 and newer.
-
-<!-- SECTION "Compatibility" [43-910] -->
+<!-- SECTION "Compatibility" [43-610] -->
 
 ## [Microsoft Visual Studio compatibility]()
 
 This SDK contains project files for Visual Studio 2017.
 
-<!-- SECTION "Microsoft Visual Studio compatibility" [911-1018] -->
+<!-- SECTION "Microsoft Visual Studio compatibility" [611-718] -->
 
 ### [Ill behavior of Visual C whole program optimization]()
 
@@ -69,7 +74,7 @@ Visual Studio versions from 2012 up produce incorrect output with default releas
 
 If you're aware of a better workaround - such as a source code change rather than setting an obscure compiler flag - please let us know; posting on the forum is preferred for the benefit of other users of this SDK.
 
-<!-- SECTION "Ill behavior of Visual C whole program optimization" [1019-1798] -->
+<!-- SECTION "Ill behavior of Visual C whole program optimization" [719-1498] -->
 
 ### ["virtual memory range for PCH exceeded" error]()
 
@@ -79,11 +84,55 @@ The SDK has been changed to reduce the amount of unnecessary code shoved into #i
 
 If you run into this error, we recommend trimming down the #includes and only referencing specific headers from helpers instead of #including all of them (via old helpers.h).
 
-<!-- SECTION "virtual memory range for PCH exceeded error" [1799-2450] -->
+<!-- SECTION "virtual memory range for PCH exceeded error" [1499-2150] -->
+
+## [Version 1.6 notes]()
+
+<!-- SECTION "Version 1.6 notes" [2151-2180] -->
+
+### [Windows XP support]()
+
+The SDK project files are configured for targetting Windows 7 and newer, with SSE2 level instruction set.
+
+If you really must compile components that run on 20 years old computers, you can still change relevant settings, or use an older SDK. Please test your components on actual hardware if you do so, VS2017 compiler has been known to output SSE opcodes when specifically told not to.
+
+<!-- SECTION "Windows XP support" [2181-2597] -->
+
+### [Audio output API extensions]()
+
+New methods have been added to the output API, such as reporting whether your output is low-latency or high-latency, to interop with the new fading code.
+
+foobar2000 now provides a suite of special fixes for problematic output implementations (guarenteed update() calls in regular intervals, silence injected at the end); use flag\_needs\_shims to enable with your output. While such feature might seem unnecessary, it allowed individual outputs to be greatly simplified, removing a lot of other special fixes implemented per output.
+
+<!-- SECTION "Audio output API extensions" [2598-3169] -->
+
+### [WebP support, imageLoaderLite]()
+
+Use fb2k::imageLoaderLite API to load a Gdiplus image from a memory block, or to extract info without actually decoding the picture. It supports WebP payload and will be updated with any formats added in the future.
+
+<!-- SECTION "WebP support, imageLoaderLite" [3170-3426] -->
+
+### [File cache utilities]()
+
+New interface has been introduced - read\_ahead\_tools - to access advanced playback settings for read-ahead cache; primarily needed if your decoder needs to open additional files over the internet.
+
+<!-- SECTION "File cache utilities" [3427-3655] -->
+
+### [Cuesheet wrapper fixes]()
+
+Wrapper code to support embedded cuesheets on arbitrary formats has been updated to deal with remote files gracefully, that is not present any chapters on such.
+
+<!-- SECTION "Cuesheet wrapper fixes" [3656-3850] -->
+
+### [libPPUI]()
+
+Notable changes: \* WebP vs Gdiplus interop (in case you want to load WebP into Gdiplus in your own app - in fb2k, use imageLoaderLite) \* Fixed horrible GdiplusImageFromMem() bug \* Combo boxes in CListControl \* CListControl graying/disabling of individual items
+
+<!-- SECTION "libPPUI" [3851-4130] -->
 
 ## [Version 1.5 notes]()
 
-<!-- SECTION "Version 1.5 notes" [2451-2480] -->
+<!-- SECTION "Version 1.5 notes" [4131-4160] -->
 
 ### [libPPUI]()
 
@@ -91,17 +140,17 @@ Various code from the helpers projects that was in no way foobar2000 specific be
 
 Existing foobar2000 components that reference SDK helpers/ATLHelpers will need updating to reference libPPUI instead. Separate helpers/ATLHelpers projects are no more, as all projects depend on libPPUI which requires ATL/WTL.
 
-<!-- SECTION "libPPUI" [2481-3066] -->
+<!-- SECTION "libPPUI" [4161-4746] -->
 
 ## [Version 1.4 notes]()
 
-<!-- SECTION "Version 1.4 notes" [3067-3096] -->
+<!-- SECTION "Version 1.4 notes" [4747-4776] -->
 
 ### [Namespace cleanup]()
 
 Some very old inconsistencies in the code have been cleaned up. Various bit\_array classes are now in pfc namespace where they belong. Please use pfc::bit\_array and so on in new code. If you have code that references bit\_array classes without the pfc:: prefix, put “using pfc::bit\_array” in your headers to work around it.
 
-<!-- SECTION "Namespace cleanup" [3097-3446] -->
+<!-- SECTION "Namespace cleanup" [4777-5126] -->
 
 ### [Decoders]()
 
@@ -143,7 +192,7 @@ For an example, if your input supports remove\_tags(), indicate that you impleme
 
     typedef input_info_writer_v2 interface_info_writer_t;
 
-<!-- SECTION "Decoders" [3447-6082] -->
+<!-- SECTION "Decoders" [5127-7762] -->
 
 ### [Dynamic runtime]()
 
@@ -151,7 +200,7 @@ As of version 1.4, foobar2000 is compiled with dynamic Visual C runtime and redi
 
 This SDK comes configured for dynamic runtime by default. If you wish to support foobar2000 versions older than 1.4, change to static runtime or make sure that your users have the runtime installed.
 
-<!-- SECTION "Dynamic runtime" [6083-6623] -->
+<!-- SECTION "Dynamic runtime" [7763-8303] -->
 
 ### [service\_query()]()
 
@@ -183,7 +232,7 @@ While using multi inheritance is not recommended and very rarely done, a new tem
 
 You can use it to avoid having to supply service\_query() code yourself and possibly change it if service\_query() semantics change again in the future.
 
-<!-- SECTION "service_query()" [6624-8334] -->
+<!-- SECTION "service_query()" [8304-10014] -->
 
 ## [Version 1.3 notes]()
 
@@ -198,7 +247,7 @@ Any methods that:
 
 It is recommended that you change your existing code using these to obtain track information using new get\_info\_ref() style methods for much better performance as these methods have minimal overhead and require no special care when used in multiple concurrent threads.
 
-<!-- SECTION "Version 1.3 notes" [8335-9090] -->
+<!-- SECTION "Version 1.3 notes" [10015-10770] -->
 
 ## [Basic usage]()
 
@@ -221,13 +270,13 @@ Component code should include the following header files:
 *   foobar2000.h from SDK - do not include other headers from the SDK directory directly, they're meant to be referenced by foobar2000.h only; it also includes PFC headers and shared.dll helper declaration headers.
 *   Necessary headers from libPPUI and helpers, which both contain various code commonly used by fb2k components.
 
-<!-- SECTION "Basic usage" [9091-10459] -->
+<!-- SECTION "Basic usage" [10771-12139] -->
 
 ## [Structure of a component]()
 
 A component is a DLL that implements one or more entrypoint services and interacts with services provided by other components.
 
-<!-- SECTION "Structure of a component" [10460-10626] -->
+<!-- SECTION "Structure of a component" [12140-12306] -->
 
 ### [Services]()
 
@@ -237,7 +286,7 @@ A service implementation is a class derived from relevant service type class, im
 
 Each service object provides reference counter features and (`service_add_ref()` and `service_release()` methods) as well as a method to query for extended functionality (`service_query()` method). Those methods are implemented by service framework and should be never overridden by service implementations. These methods should also never be called directly - reference counter methods are managed by relevant autopointer templates, `service_query_t` function template should be used instead of calling `service_query` directly, to ensure type safety and correct type conversions.
 
-<!-- SECTION "Services" [10627-12892] -->
+<!-- SECTION "Services" [12307-14572] -->
 
 ### [Entrypoint services]()
 
@@ -270,7 +319,7 @@ A typical entrypoint service implementation looks like this:
     };
     static service_factory_single_t<myservice_impl> g_myservice_impl_factory;
 
-<!-- SECTION "Entrypoint services" [12893-15350] -->
+<!-- SECTION "Entrypoint services" [14573-17030] -->
 
 ### [Service extensions]()
 
@@ -287,7 +336,7 @@ In such scenario, to query whether a myservice instance is a `myservice_v2` and 
     if (ptr->service_query_t(ptr_ex)) { /* ptr_ex is a valid pointer to myservice_v2 interface of our myservice instance */ (...) }
     else {/* this myservice implementation does not implement myservice_v2 */ (...) }
 
-<!-- SECTION "Service extensions" [15351-16290] -->
+<!-- SECTION "Service extensions" [17031-17970] -->
 
 ### [Autopointer template use]()
 
@@ -297,7 +346,7 @@ For convenience, all service classes have `myclass::ptr` typedef'd to `service_p
 
 When working with pointers to core fb2k services, just use C++11 `auto` keyword and `someclass::get()`, e.g. `auto myAPI = playlist_manager::get();`
 
-<!-- SECTION "Autopointer template use" [16291-16858] -->
+<!-- SECTION "Autopointer template use" [17971-18538] -->
 
 ### [Exception use]()
 
@@ -307,7 +356,7 @@ Additionally, special subclasses of exceptions are defined for use in specific c
 
 Implementations of global callback services such as `playlist_callback`, `playback_callback` or `library_callback` must not throw unhandled exceptions; behaviors in case they do are undefined (app termination is to be expected).
 
-<!-- SECTION "Exception use" [16859-17876] -->
+<!-- SECTION "Exception use" [18539-19556] -->
 
 ### [Storing configuration]()
 
@@ -317,7 +366,7 @@ Each `cfg_var` instance has a GUID assigned, to identify its configuration file 
 
 Note that `cfg_var` objects can only be instantiated statically (either directly as static objects, or as members of other static objects). Additionally, you can create configuration data objects that can be accessed by other components, by implementing `config_object` service. Some standard configuration variables can be also accessed using `config_object` interface.
 
-<!-- SECTION "Storing configuration" [17877-18812] -->
+<!-- SECTION "Storing configuration" [19557-20492] -->
 
 ### [Use of global callback services]()
 
@@ -343,19 +392,19 @@ You must not enter modal message loops from inside global callbacks, as those al
 
 You should also avoid firing a cross-thread SendMessage() inside global callbacks as well as performing any operations that dispatch global callbacks when handling a message that was sent through a cross-thread SendMessage(). Doing so may result in rare unwanted recursions - SendMessage() call will block the calling thread and immediately process any incoming cross-thread SendMessage() messages. If you're handling a cross-thread SendMessage() and need to perform such operation, delay it using PostMessage() or main\_thread\_callback.
 
-<!-- SECTION "Use of global callback services" [18813-21234] -->
+<!-- SECTION "Use of global callback services" [20493-22914] -->
 
 ## [Service class design guidelines (advanced)]()
 
 This chapter describes things you should keep on your mind when designing your own service type classes. Since 99% of components will only implement existing service types rather than adding their own cross-DLL-communication protocols, you can probably skip reading this chapter.
 
-<!-- SECTION "Service class design guidelines (advanced)" [21235-21571] -->
+<!-- SECTION "Service class design guidelines (advanced)" [22915-23251] -->
 
 ### [Cross-DLL safety]()
 
 It is important that all function parameters used by virtual methods of services are cross-DLL safe (do not depend on compiler-specific or runtime-specific behaviors, so no unexpected behaviors occur when calling code is built with different compiler/runtime than callee). To achieve this, any classes passed around must be either simple objects with no structure that could possibly vary with different compilers/runtimes (i.e. make sure that any memory blocks are freed on the side that allocated them); easiest way to achieve this is to reduce all complex data objects or classes passed around to interfaces with virtual methods, with implementation details hidden from callee. For an example, use `pfc::string_base&` as parameter to a function that is meant to return variable-length strings.
 
-<!-- SECTION "Cross-DLL safety" [21572-22399] -->
+<!-- SECTION "Cross-DLL safety" [23252-24079] -->
 
 ### [Entrypoint service efficiency]()
 
@@ -421,4 +470,4 @@ When designing an entrypoint service interface meant to have multiple different 
     	throw exception_io_data();
     }
 
-<!-- SECTION "Entrypoint service efficiency" [22400-] -->
+<!-- SECTION "Entrypoint service efficiency" [24080-] -->
