@@ -1,4 +1,4 @@
-# foobar2000 SDK, version 2022-11-16
+# foobar2000 SDK, version 2023-01-18
 
 Documentation:\
 [SDK release notes](https://wiki.hydrogenaud.io/index.php?title=Foobar2000:Development:SDK_2022-11-16_Release_Notes)\
